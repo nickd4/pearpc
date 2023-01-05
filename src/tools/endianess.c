@@ -18,13 +18,13 @@
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
  
-#include <cstring>
+#include <string.h> //<cstring>
 
 #include "debug.h"
 #include "endianess.h"
 #include "system/types.h"
 
-extern "C" void createForeignInt(void *buf, int i, int size, Endianess to_endianess)
+/*extern "C"*/ void createForeignInt(void *buf, int i, int size, Endianess to_endianess)
 {
 	uint8 *b = (uint8*)buf;
 	switch (size) {
@@ -61,7 +61,7 @@ extern "C" void createForeignInt(void *buf, int i, int size, Endianess to_endian
 	}
 }
 
-extern "C" int createHostInt(const void *buf, int size, Endianess from_endianess)
+/*extern "C"*/ int createHostInt(const void *buf, int size, Endianess from_endianess)
 {
 	uint8 *b = (uint8*)buf;
 	switch (size) {
@@ -88,7 +88,7 @@ extern "C" int createHostInt(const void *buf, int size, Endianess from_endianess
 	return 0;
 }
 
-extern "C" void createForeignInt64(void *buf, uint64 i, int size, Endianess to_endianess)
+/*extern "C"*/ void createForeignInt64(void *buf, uint64 i, int size, Endianess to_endianess)
 {
 	if (size <= 4) {
 		return createForeignInt(buf, i, size, to_endianess);
@@ -121,7 +121,7 @@ extern "C" void createForeignInt64(void *buf, uint64 i, int size, Endianess to_e
 	}
 }
 
-extern "C" uint64 createHostInt64(const void *buf, int size, Endianess from_endianess)
+/*extern "C"*/ uint64 createHostInt64(const void *buf, int size, Endianess from_endianess)
 {
 	if (size <= 4) {
 		return createHostInt(buf, size, from_endianess);
@@ -141,7 +141,7 @@ extern "C" uint64 createHostInt64(const void *buf, int size, Endianess from_endi
 	return q;
 }
 
-extern "C" void createHostStructx(void *buf, uint bufsize, const uint8 *table, Endianess from_endianess)
+/*extern "C"*/ void createHostStructx(void *buf, uint bufsize, const uint8 *table, Endianess from_endianess)
 {
 	uint8 *buf2 = (uint8*)buf;
 	while (*table) {

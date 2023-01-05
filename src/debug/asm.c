@@ -18,12 +18,12 @@
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <cstring>
-#include <cstdio>
+#include <string.h> //<cstring>
+#include <stdio.h> //<cstdio>
 #include <stdarg.h>
 
 #include "asm.h"
-#include "tools/data.h"
+//#include "tools/data.h"
 #include "tools/atom.h"
 #include "tools/debug.h"
 #include "tools/snprintf.h"
@@ -32,7 +32,10 @@
  *	CLASS disassembler
  */
 
-Disassembler::Disassembler()
+int options;
+bool highlight;
+
+void/*Disassembler::*/Disassembler(void)
 {
 	disable_highlighting();
 }
@@ -40,12 +43,12 @@ Disassembler::Disassembler()
 char* (*addr_sym_func)(CPU_ADDR addr, int *symstrlen, void *context) = NULL;
 void* addr_sym_func_context = NULL;
 
-dis_insn *Disassembler::createInvalidInsn()
+dis_insn */*Disassembler::*/createInvalidInsn(void)
 {
 	return NULL;
 }
 
-void Disassembler::hexd(char **s, int size, int options, uint32 imm)
+void /*Disassembler::*/hexd(char **s, int size, int options, uint32 imm)
 {
 	char ff[16];
 	char *f = (char*)&ff;
@@ -74,7 +77,7 @@ void Disassembler::hexd(char **s, int size, int options, uint32 imm)
 	}
 }
 
-void Disassembler::hexq(char **s, int size, int options, uint64 imm)
+void /*Disassembler::*/hexq(char **s, int size, int options, uint64 imm)
 {
 	char ff[32];
 	char *f = (char*)&ff;
@@ -105,17 +108,19 @@ void Disassembler::hexq(char **s, int size, int options, uint64 imm)
 	}
 }
 
-bool Disassembler::selectNext(dis_insn *disasm_insn)
+bool /*Disassembler::*/selectNext(dis_insn *disasm_insn)
 {
 	return false;
 }
 
-const char *Disassembler::str(dis_insn *disasm_insn, int style)
+#if 0 // overridden in ppcdis.c
+const char */*Disassembler::*/str(dis_insn *disasm_insn, int style)
 {
 	return strf(disasm_insn, style, DISASM_STRF_DEFAULT_FORMAT);
 }
+#endif
 
-const char *Disassembler::get_cs(AsmSyntaxHighlightEnum style)
+const char */*Disassembler::*/get_cs(AsmSyntaxHighlightEnum style)
 {
 	const char *highlights[] = {
 		ASM_SYNTAX_DEFAULT,
@@ -127,12 +132,12 @@ const char *Disassembler::get_cs(AsmSyntaxHighlightEnum style)
 	return (highlight) ? highlights[(int)style] : "";
 }
 
-void Disassembler::enable_highlighting()
+void /*Disassembler::*/enable_highlighting(void)
 {
 	highlight = true;
 }
 
-void Disassembler::disable_highlighting()
+void /*Disassembler::*/disable_highlighting(void)
 {
 	highlight = false;
 }

@@ -21,11 +21,12 @@
 #ifndef __ASM_H__
 #define __ASM_H__
 
-#include "tools/data.h"
+#include <stdbool.h>
+#include "system/types.h" //"tools/data.h"
 
 #define MAX_INSN_SIZE	16
 
-struct CPU_ADDR {
+typedef struct CPU_ADDR {
 	union {
 		struct {
 			uint16 seg;
@@ -35,14 +36,14 @@ struct CPU_ADDR {
 			uint64 addr;
 		} flat64;
 	};
-};
+} CPU_ADDR;
 
-struct asm_code {
-	asm_code *next;
+typedef struct asm_code {
+	struct asm_code *next;
 	int size;
 	byte data[MAX_INSN_SIZE];
 	void *context;
-};
+} asm_code;
 
 typedef void dis_insn;
 
@@ -51,7 +52,7 @@ typedef void dis_insn;
  */
 
 /* generic disassembler styles */
-#define DIS_STYLE_HIGHLIGHT		0x80000000		/* create highlighting information in strf() */
+#define DIS_STYLE_HIGHLIGHT		0x80000000		/* create highlighting information in strf(void) */
 #define DIS_STYLE_HEX_CSTYLE		0x40000000		/* IF SET: mov eax, 0x12345678 		ELSE: mov eax, 12345678 */
 #define DIS_STYLE_HEX_ASMSTYLE		0x20000000		/* IF SET: mov eax, 12345678h 		ELSE: mov eax, 12345678 */
 #define DIS_STYLE_HEX_UPPERCASE		0x10000000		/* IF SET: mov eax, 5678ABCD	 	ELSE: mov eax, 5678abcd */
@@ -63,41 +64,41 @@ typedef void dis_insn;
 extern char* (*addr_sym_func)(CPU_ADDR addr, int *symstrlen, void *context);
 extern void* addr_sym_func_context;
 
-enum AsmSyntaxHighlightEnum {
+typedef enum AsmSyntaxHighlightEnum {
 	e_cs_default=0,
 	e_cs_comment,
 	e_cs_number,
 	e_cs_symbol,
 	e_cs_string
-};
+} AsmSyntaxHighlightEnum;
 
-class Disassembler: public Object {
-protected:
-	int options;
-	bool highlight;
+//class Disassembler: public Object {
+//protected:
+	extern int options;
+	extern bool highlight;
 
 		const char *get_cs(AsmSyntaxHighlightEnum style);
 		void hexd(char **s, int size, int options, uint32 imm);
 		void hexq(char **s, int size, int options, uint64 imm);
-		void enable_highlighting();
-		void disable_highlighting();
-public:
-		Disassembler();
+		void enable_highlighting(void);
+		void disable_highlighting(void);
+//public:
+		void Disassembler(void);
 /* new */
-	virtual	dis_insn *createInvalidInsn();
-	virtual	dis_insn *decode(const byte *code, int maxlen, CPU_ADDR cur_address)=0;
-	virtual	dis_insn *duplicateInsn(dis_insn *disasm_insn)=0;
-	virtual	void	getOpcodeMetrics(int &min_length, int &max_length, int &min_look_ahead, int &avg_look_ahead, int &addr_align)=0;
-	virtual	byte getSize(dis_insn *disasm_insn)=0;
-	virtual	const char *getName()=0;
-	virtual	bool selectNext(dis_insn *disasm_insn);
-	virtual	const char *str(dis_insn *disasm_insn, int style);
-	virtual	const char *strf(dis_insn *disasm_insn, int style, const char *format)=0;
-	virtual	bool validInsn(dis_insn *disasm_insn)=0;
-};
+	/*virtual*/	dis_insn *createInvalidInsn(void);
+	/*virtual*/	dis_insn *decode(const byte *code, int maxlen, CPU_ADDR cur_address)/*=0*/;
+	/*virtual*/	dis_insn *duplicateInsn(dis_insn *disasm_insn)/*=0*/;
+	/*virtual*/	void	getOpcodeMetrics(int *min_length, int *max_length, int *min_look_ahead, int *avg_look_ahead, int *addr_align)/*=0*/;
+	/*virtual*/	byte getSize(dis_insn *disasm_insn)/*=0*/;
+	/*virtual*/	const char *getName(void)/*=0*/;
+	/*virtual*/	bool selectNext(dis_insn *disasm_insn);
+	/*virtual*/	const char *str(dis_insn *disasm_insn, int style);
+	/*virtual*/	const char *strf(dis_insn *disasm_insn, int style, const char *format)/*=0*/;
+	/*virtual*/	bool validInsn(dis_insn *disasm_insn)/*=0*/;
+//};
 
 /*****************************************************************************
- *	The strf() format                                                       *
+ *	The strf(void) format                                                       *
  *****************************************************************************
 	String	Action
     --------------------------------------------------

@@ -62,11 +62,11 @@
  *    * added '%b' for formatting in binary notation.
  **************************************************************/
 
-#include <cctype>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <cstdarg>
+#include <ctype.h> //<cctype>
+#include <string.h> //<cstring>
+#include <stdlib.h> //<cstdlib>
+#include <stdio.h> //<cstdio>
+#include <stdarg.h> //<cstdarg>
 #include <sys/types.h>
 
 #ifdef HAVE_CONFIG_H
@@ -74,7 +74,7 @@
 #endif
 
 #include "system/types.h"
-#include "data.h"
+//#include "data.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -418,6 +418,7 @@ static size_t dopr(char *buffer, size_t maxlen, const char *format, va_list args
 						/* not supported yet, treat as next char */
 						ch = *format++;
 						break;
+#if 0
 					case 'y': {
 						/* object */
 						Object *obj = va_arg (args, Object *);
@@ -433,6 +434,7 @@ static size_t dopr(char *buffer, size_t maxlen, const char *format, va_list args
 						}
 						break;
 					}
+#endif
 					default:
 						/* Unknown, skip */
 						break;

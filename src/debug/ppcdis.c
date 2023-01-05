@@ -20,19 +20,27 @@
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <cstring>
+#include <string.h> //<cstring>
+#if 1 // Nick
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 #include "tools/endianess.h"
 #include "tools/snprintf.h"
 #include "ppcdis.h"
 #include "ppcopc.h"
 
-PPCDisassembler::PPCDisassembler(int aMode)
+char insnstr[256];
+ppcdis_insn insn;
+int mode;
+
+void/*PPCDisassembler::*/PPCDisassembler(int aMode)
 {
 	mode = aMode;
 }
 
-dis_insn *PPCDisassembler::decode(const byte *code, int maxlen, CPU_ADDR addr)
+dis_insn */*PPCDisassembler::*/decode(const byte *code, int maxlen, CPU_ADDR addr)
 {
 	const struct powerpc_opcode *opcode;
 	const struct powerpc_opcode *opcode_end;
@@ -151,34 +159,38 @@ dis_insn *PPCDisassembler::decode(const byte *code, int maxlen, CPU_ADDR addr)
 	return &insn;
 }
 
-dis_insn *PPCDisassembler::duplicateInsn(dis_insn *disasm_insn)
+dis_insn */*PPCDisassembler::*/duplicateInsn(dis_insn *disasm_insn)
 {
-	ppcdis_insn *insn = ppc_malloc(sizeof (ppcdis_insn));
+	ppcdis_insn *insn = /*ppc_*/malloc(sizeof (ppcdis_insn));
+	if (insn == NULL) {
+		perror("malloc()");
+		exit(EXIT_FAILURE);
+	}
 	*insn = *(ppcdis_insn *)disasm_insn;
 	return insn;
 }
 
-void PPCDisassembler::getOpcodeMetrics(int &min_length, int &max_length, int &min_look_ahead, int &avg_look_ahead, int &addr_align)
+void /*PPCDisassembler::*/getOpcodeMetrics(int *min_length, int *max_length, int *min_look_ahead, int *avg_look_ahead, int *addr_align)
 {
-	min_length = max_length = min_look_ahead = avg_look_ahead = addr_align = 4;
+	*min_length = *max_length = *min_look_ahead = *avg_look_ahead = *addr_align = 4;
 }
 
-byte PPCDisassembler::getSize(dis_insn *disasm_insn)
+byte /*PPCDisassembler::*/getSize(dis_insn *disasm_insn)
 {
 	return ((ppcdis_insn*)disasm_insn)->size;
 }
 
-const char *PPCDisassembler::getName()
+const char */*PPCDisassembler::*/getName(void)
 {
 	return "PPC/Disassembler";
 }
 
-const char *PPCDisassembler::str(dis_insn *disasm_insn, int style)
+const char */*PPCDisassembler::*/str(dis_insn *disasm_insn, int style)
 {
 	return strf(disasm_insn, style, "");
 }
 
-const char *PPCDisassembler::strf(dis_insn *disasm_insn, int style, const char *format)
+const char */*PPCDisassembler::*/strf(dis_insn *disasm_insn, int style, const char *format)
 {
 	if (style & DIS_STYLE_HIGHLIGHT) enable_highlighting();
 	
@@ -280,9 +292,62 @@ const char *PPCDisassembler::strf(dis_insn *disasm_insn, int style, const char *
 	return insnstr;     
 }
 
-bool PPCDisassembler::validInsn(dis_insn *disasm_insn)
+bool /*PPCDisassembler::*/validInsn(dis_insn *disasm_insn)
 {
 	return ((ppcdis_insn*)disasm_insn)->valid;
 }
 
+#if 1 // Nick
+static uint8_t mem[0x1000000]; // 16M
 
+int main(int argc, char **argv) {
+	Disassembler();
+	PPCDisassembler(PPC_MODE_32);
+	if (argc >= 2) {
+		// command-line argument is .bin file to disassemble
+		int fd = open(argv[1], O_RDONLY);
+		if (fd == -1) {
+			perror(argv[1]);
+			exit(EXIT_FAILURE);
+		}
+
+		ssize_t result = read(fd, mem, 0x1000000); // maximum of 16M
+		if (result == (ssize_t)-1) {
+			perror("read()");
+			exit(EXIT_FAILURE);
+		}
+		int size = (int)result & ~3;
+
+		close(fd);
+
+		for (int pc = 0; pc < size; pc += 4) {
+			dis_insn *p = decode(mem + pc, 4, (CPU_ADDR){.addr32 = {.offset = pc}});
+			printf("%08x %08x\t%s\n", pc, ((ppcdis_insn *)p)->data, str(p, 0));
+		} 
+	}
+	else {
+		// with no command-line argument, print opcode table
+		// note that it is not correct for some instructions like bdnz+
+		// as there are further opcode restrictions based on *invalid
+		for (int i = 0; i < powerpc_num_opcodes; ++i) {
+			printf("opcodes %s %08x %08x\n", powerpc_opcodes[i].name, (int)powerpc_opcodes[i].opcode, (int)powerpc_opcodes[i].mask);
+			for (int j = -1; j < 0x20; ++j) {
+				uint32 opcode = powerpc_opcodes[i].opcode;
+				if (j >= 0) {
+					if (powerpc_opcodes[i].mask & ((uint32)1 << j))
+						continue;
+					opcode |= (uint32)1 << j;
+				}
+
+				uint8_t data[4];
+				createForeignInt(data, opcode, 4, big_endian);
+				dis_insn *p = decode(data, 4, (CPU_ADDR){.addr32 = {.offset = 0}});
+				printf("%08x\t%s\n", ((ppcdis_insn *)p)->data, str(p, 0));
+			}
+			printf("\n");
+		}
+	}
+
+	return 0;
+}
+#endif

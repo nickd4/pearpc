@@ -21,11 +21,12 @@
 #ifndef __PPC_DIS_H__
 #define __PPC_DIS_H__
 
+#include <stdbool.h>
 #include "system/types.h"
 #include "asm.h"
 #include "ppcopc.h"
 
-struct ppcdis_operand {
+typedef struct ppcdis_operand {
 	int flags;
 	const powerpc_operand *op;
 	union {
@@ -45,36 +46,36 @@ struct ppcdis_operand {
 			uint64 mem;
 		} rel;
 	};
-};
+} ppcdis_operand;
 
-struct ppcdis_insn {
+typedef/*const*/ struct ppcdis_insn {
 	bool			valid;
 	int			size;
 	const char *		name;
 	uint32			data;
 	int			ops;
 	ppcdis_operand		op[8];
-};
+} ppcdis_insn;
 
 #define PPC_MODE_32 0
 #define PPC_MODE_64 1
 
-class PPCDisassembler: public Disassembler {
-protected:
-	char insnstr[256];
-	ppcdis_insn insn;
-	int mode;
-public:
-			PPCDisassembler(int mode);
+//class PPCDisassembler: public Disassembler {
+//protected:
+	extern char insnstr[256];
+	extern ppcdis_insn insn;
+	extern int mode;
+//public:
+			void PPCDisassembler(int mode);
 
-	virtual	dis_insn	*decode(const byte *code, int maxlen, CPU_ADDR addr);
-	virtual	dis_insn	*duplicateInsn(dis_insn *disasm_insn);
-	virtual	void		getOpcodeMetrics(int &min_length, int &max_length, int &min_look_ahead, int &avg_look_ahead, int &addr_align);
-	virtual	byte		getSize(dis_insn *disasm_insn);
-	virtual	const char	*getName();
-	virtual	const char	*str(dis_insn *disasm_insn, int style);
-	virtual	const char	*strf(dis_insn *disasm_insn, int style, const char *format);
-	virtual	bool		validInsn(dis_insn *disasm_insn);
-};
+	/*virtual*/	dis_insn	*decode(const byte *code, int maxlen, CPU_ADDR addr);
+	/*virtual*/	dis_insn	*duplicateInsn(dis_insn *disasm_insn);
+	/*virtual*/	void		getOpcodeMetrics(int *min_length, int *max_length, int *min_look_ahead, int *avg_look_ahead, int *addr_align);
+	/*virtual*/	byte		getSize(dis_insn *disasm_insn);
+	/*virtual*/	const char	*getName(void);
+	/*virtual*/	const char	*str(dis_insn *disasm_insn, int style);
+	/*virtual*/	const char	*strf(dis_insn *disasm_insn, int style, const char *format);
+	/*virtual*/	bool		validInsn(dis_insn *disasm_insn);
+//};
 
 #endif

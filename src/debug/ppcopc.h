@@ -24,6 +24,7 @@
 #ifndef __PPC_OPC_H__
 #define __PPC_OPC_H__
 
+#include <stdbool.h>
 #include "system/types.h"
 
 /* The opcode table is an array of struct powerpc_opcode.  */
@@ -139,7 +140,7 @@ extern const int powerpc_num_opcodes;
 
 /* The operands table is an array of struct powerpc_operand.  */
 
-struct powerpc_operand
+typedef struct powerpc_operand
 {
 	/* The number of bits in the operand.  */
 	byte bits;
@@ -169,7 +170,7 @@ struct powerpc_operand
 
 	/* One bit syntax flags.  */
 	uint32 flags;
-};
+} powerpc_operand;
 
 /* Elements in the table are retrieved by indexing with values from
    the operands field of the powerpc_opcodes table.  */
