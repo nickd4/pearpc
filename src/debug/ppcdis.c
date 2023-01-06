@@ -89,7 +89,7 @@ dis_insn */*PPCDisassembler::*/decode(const byte *code, int maxlen, CPU_ADDR add
 		/* The instruction is valid.  */
 		insn.name = opcode->name;
 
-		/* Now extract and print the operands.  */
+		/* Now extract the operands.  */
 		int opidx = 0;
 		for (opindex = opcode->operands; *opindex != 0; opindex++) {
 			sint32 value;
@@ -126,7 +126,11 @@ dis_insn */*PPCDisassembler::*/decode(const byte *code, int maxlen, CPU_ADDR add
 					insn.op[opidx++].reg = value;
 				} else {
 					insn.op[opidx].flags = 0;
+#if 1 // Nick
+					insn.op[opidx++].imm = value;
+#else
 					insn.op[opidx].imm = value;
+#endif
 				}
 			} else if (operand->flags & PPC_OPERAND_GPR) {
 				insn.op[opidx++].reg = value;
@@ -141,7 +145,16 @@ dis_insn */*PPCDisassembler::*/decode(const byte *code, int maxlen, CPU_ADDR add
 					insn.op[opidx++].rel.mem = addr.flat64.addr + value;
 				}
 			} else if ((operand->flags & PPC_OPERAND_ABSOLUTE) != 0) {
+#if 1 // Nick
+				if (mode == PPC_MODE_32) {
+					insn.op[opidx++].abs.mem = (uint32)value;
+				}
+				else {
+					insn.op[opidx++].abs.mem = value;
+				}
+#else
 				insn.op[opidx++].abs.mem = value;
+#endif
 			} else if ((operand->flags & PPC_OPERAND_CR) == 0 || (dialect & PPC_OPCODE_PPC) == 0) {
 				insn.op[opidx++].imm = (sint64)value;
 			} else {
@@ -269,10 +282,14 @@ const char */*PPCDisassembler::*/strf(dis_insn *disasm_insn, int style, const ch
 				cr = ppc_insn->op[opidx].creg >> 2;
 				if (cr != 0) is += sprintf(is, "%s4%s*%scr%d", cs_number, cs_symbol, cs_default, cr);
 				cc = ppc_insn->op[opidx].creg & 3;
+#if 0 // Nick
 				if (cc != 0) {
+#endif
 					if (cr != 0) is += sprintf(is, "%s+", cs_symbol);
 					is += sprintf(is, "%s%s", cs_default, cbnames[cc]);
+#if 0 // Nick
 				}
+#endif
 			}
 		
 			if (need_paren) {

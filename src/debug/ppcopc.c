@@ -55,11 +55,15 @@ static uint32 extract_bba(uint32 insn, bool *invalid)
 
 static uint32 extract_bd(uint32 insn, bool *invalid)
 {
+#if 1 // Nick
+	return ((insn & 0xfffc) ^ 0x8000) - 0x8000;
+#else
 	if ((insn & 0x8000) != 0) {
 		return (insn & 0xfffc) - 0x10000;
 	} else {
 		return insn & 0xfffc;
 	}
+#endif
 }
 
 /* The BD field in a B form instruction when the - modifier is used.
@@ -172,11 +176,15 @@ static uint32 extract_ds(uint32 insn, bool *invalid)
 
 static uint32 extract_li(uint32 insn, bool *invalid)
 {
+#if 1 // Nick
+	return ((insn & 0x3fffffc) ^ 0x2000000) - 0x2000000;
+#else
 	if ((insn & 0x2000000) != 0) {
 		return (insn & 0x3fffffc) - 0x4000000;
 	} else {
 		return insn & 0x3fffffc;
 	}
+#endif
 }
 
 /* The MB and ME fields in an M form instruction expressed as a single
