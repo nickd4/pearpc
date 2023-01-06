@@ -300,6 +300,94 @@ bool /*PPCDisassembler::*/validInsn(dis_insn *disasm_insn)
 #if 1 // Nick
 static uint8_t mem[0x1000000]; // 16M
 
+static const char *operand_types[] = {
+	"UNUSED",	// #define UNUSED 0
+	"BA",		// #define BA UNUSED + 1
+	"BAT",		// #define BAT BA + 1
+	"BB",		// #define BB BAT + 1
+	"BBA",		// #define BBA BB + 1
+	"BD",		// #define BD BBA + 1
+	"BDA",		// #define BDA BD + 1
+	"BDM",		// #define BDM BDA + 1
+	"BDMA",		// #define BDMA BDM + 1
+	"BDP",		// #define BDP BDMA + 1
+	"BDPA",		// #define BDPA BDP + 1
+	"BF",		// #define BF BDPA + 1
+	"OBF",		// #define OBF BF + 1
+	"BFA",		// #define BFA OBF + 1
+	"BI",		// #define BI BFA + 1
+	"BO",		// #define BO BI + 1
+	"BOE",		// #define BOE BO + 1
+	"BT",		// #define BT BOE + 1
+	"CR",		// #define CR BT + 1
+	"CRB",		// #define CRB CR + 1
+	"CRFD",		// #define CRFD CRB + 1
+	"CRFS",		// #define CRFS CRFD + 1
+	"CT",		// #define CT CRFS + 1
+	"D",		// #define D CT + 1
+	"DS",		// #define DS D + 1
+	"FLM",		// #define FLM DS + 1
+	"FRA",		// #define FRA FLM + 1
+	"FRB",		// #define FRB FRA + 1
+	"FRC",		// #define FRC FRB + 1
+	"FRS",		// #define FRS FRC + 1
+	"FXM",		// #define FXM FRS + 1
+	"L",		// #define L FXM + 1
+	"LI",		// #define LI L + 1
+	"LIA",		// #define LIA LI + 1
+	"LS",		// #define LS LIA + 1
+	"MB",		// #define MB LS + 1
+	"ME",		// #define ME MB + 1
+	"MBE",		// #define MBE ME + 1
+	"UNUSED",
+	"MB6",		// #define MB6 MBE + 2
+	"MSLWI",	// #define MSLWI MB6 + 1
+	"MSRWI",	// #define MSRWI MSLWI + 1
+	"MO",		// #define MO MSRWI + 1
+	"NB",		// #define NB MO + 1
+	"NSI",		// #define NSI NB + 1
+	"RA",		// #define RA NSI + 1
+	"RA0",		// #define RA0 RA + 1
+	"RAL",		// #define RAL RA0 + 1
+	"RAM",		// #define RAM RAL + 1
+	"RAS",		// #define RAS RAM + 1
+	"RB",		// #define RB RAS + 1
+	"RBS",		// #define RBS RB + 1
+	"RS",		// #define RS RBS + 1
+	"SH",		// #define SH RS + 1
+	"SH6",		// #define SH6 SH + 1
+	"SI",		// #define SI SH6 + 1
+	"SISIGNOPT",	// #define SISIGNOPT SI + 1
+	"SPR",		// #define SPR SISIGNOPT + 1
+	"SPRBAT",	// #define SPRBAT SPR + 1
+	"SPRG",		// #define SPRG SPRBAT + 1
+	"SR",		// #define SR SPRG + 1
+	"STRM",		// #define STRM SR + 1
+	"SV",		// #define SV STRM + 1
+	"TBR",		// #define TBR SV + 1
+	"TO",		// #define TO TBR + 1
+	"U",		// #define U TO + 1
+	"UI",		// #define UI U + 1
+	"VA",		// #define VA UI + 1
+	"VB",		// #define VB VA + 1
+	"VAB",		// #define VAB VB + 1
+	"VC",		// #define VC VAB + 1
+	"VD",		// #define VD VC + 1
+	"VD128",	// #define VD128 VD + 1
+	"VA128",	// #define VA128 VD128 + 1
+	"VB128",	// #define VB128 VA128 + 1
+	"VC128",	// #define VC128 VB128 + 1
+	"VPERM128",	// #define VPERM128 VC128 + 1
+	"VD3D0",	// #define VD3D0 VPERM128 + 1
+	"VD3D1",	// #define VD3D1 VD3D0 + 1
+	"VD3D2",	// #define VD3D2 VD3D1 + 1
+	"SIMM",		// #define SIMM VD3D2 + 1
+	"UIMM",		// #define UIMM SIMM + 1
+	"SHB",		// #define SHB UIMM + 1
+	"WS",		// #define WS SHB + 1
+	"MTMSRD_L",	// #define MTMSRD_L WS + 1
+};
+
 int main(int argc, char **argv) {
 	Disassembler();
 	PPCDisassembler(PPC_MODE_32);
@@ -330,7 +418,17 @@ int main(int argc, char **argv) {
 		// note that it is not correct for some instructions like bdnz+
 		// as there are further opcode restrictions based on *invalid
 		for (int i = 0; i < powerpc_num_opcodes; ++i) {
-			printf("opcodes %s %08x %08x\n", powerpc_opcodes[i].name, (int)powerpc_opcodes[i].opcode, (int)powerpc_opcodes[i].mask);
+			printf("opcodes %s ", powerpc_opcodes[i].name);
+			for (int j = 0; j < 8; ++j) {
+				int operand_type = powerpc_opcodes[i].operands[j];
+				if (operand_type == 0) {
+					if (j == 0)
+						printf("_");
+					break;
+				}
+				printf("%s%s", j ? "," : "", operand_types[operand_type]);
+			}
+			printf(" %08x %08x\n", (int)powerpc_opcodes[i].opcode, (int)powerpc_opcodes[i].mask);
 			for (int j = -1; j < 0x20; ++j) {
 				uint32 opcode = powerpc_opcodes[i].opcode;
 				if (j >= 0) {
