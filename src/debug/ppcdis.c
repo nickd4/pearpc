@@ -445,18 +445,50 @@ int main(int argc, char **argv) {
 				}
 				printf("%s%s", j ? "," : "", operand_types[operand_type]);
 			}
-			printf(" %08x %08x\n", (int)powerpc_opcodes[i].opcode, (int)powerpc_opcodes[i].mask);
-			for (int j = -1; j < 0x20; ++j) {
-				uint32 opcode = powerpc_opcodes[i].opcode;
-				if (j >= 0) {
-					if (powerpc_opcodes[i].mask & ((uint32)1 << j))
+			uint32 opcode = powerpc_opcodes[i].opcode;
+			uint32 mask = powerpc_opcodes[i].mask;
+			printf(" %08x %08x\n", (int)opcode, (int)powerpc_opcodes[i].mask);
+			if ((opcode >> 26) == 16) {
+				// for branch instruction cycle through BO, BI,
+				// while ignoring repeated lines due to masking
+				uint32 done[0x400 >> 5];
+				memset(done, 0, 0x400 >> 3);
+				for (int j = 0; j < 0x400; ++j) {
+					int k = j & ~(mask >> 16);
+
+					int l = k >> 5;
+					uint32 m = 1U << (k & 0x1f);
+					if (done[l] & m)
 						continue;
-					opcode |= (uint32)1 << j;
+					done[l] |= m;
+
+					uint32 opcode1 = opcode | (k << 16);
+					for (int n = -1; n < 0x10; ++n) {
+						uint32 opcode2 = opcode1;
+						if (n >= 0) {
+							if (mask & ((uint32)1 << n))
+								continue;
+							opcode2 |= (uint32)1 << n;
+						}
+
+						uint8_t data[4];
+						createForeignInt(data, opcode2, 4, big_endian);
+						dis_insn *p = decode(data, 4, (CPU_ADDR){.addr32 = {.offset = 4}});
+						printf("%08x\t%s\n", ((ppcdis_insn *)p)->data, str(p, 0));
+					}
+				}
+			}
+			else for (int j = -1; j < 0x20; ++j) {
+				uint32 opcode1 = opcode;
+				if (j >= 0) {
+					if (mask & ((uint32)1 << j))
+						continue;
+					opcode1 |= (uint32)1 << j;
 				}
 
 				uint8_t data[4];
-				createForeignInt(data, opcode, 4, big_endian);
-				dis_insn *p = decode(data, 4, (CPU_ADDR){.addr32 = {.offset = 0}});
+				createForeignInt(data, opcode1, 4, big_endian);
+				dis_insn *p = decode(data, 4, (CPU_ADDR){.addr32 = {.offset = 4}});
 				printf("%08x\t%s\n", ((ppcdis_insn *)p)->data, str(p, 0));
 			}
 			printf("\n");
